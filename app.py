@@ -10,8 +10,8 @@ st.title("🎓 Sistem Rekomendasi Program Studi")
 
 st.markdown("Masukkan data diri kamu untuk mendapatkan saran jurusan yang cocok berdasarkan algoritma **XGBoost**.")
 
-# ====== Bahasa ======
-language = st.selectbox("🌐 Pilih Bahasa", ["Bahasa Indonesia", "English"])
+# ====== Bahasa (placeholder jika mau dikembangkan multilingual) ======
+st.selectbox("🌐 Pilih Bahasa", ["Bahasa Indonesia", "English"])
 
 # ====== Riwayat Prediksi (Session State) ======
 if "history" not in st.session_state:
@@ -26,15 +26,13 @@ def get_model():
 st.markdown("### 🧩 Tambahan Informasi Personal")
 sekolah = st.selectbox("🏫 Jenis Sekolah", ["SMA IPA", "SMA IPS", "SMK TKJ", "SMK Akuntansi", "MA", "Homeschooling"])
 lokasi = st.selectbox("🌍 Lokasi studi yang diinginkan", ["Jawa Barat", "DKI Jakarta", "Yogyakarta", "Luar Negeri"])
-tujuan = st.selectbox("🎯 Saat kuliah nanti, kamu ingin lebih fokus ke:", [
+tujuan = st.selectbox("🌟 Fokus kuliah yang diinginkan", [
     "Ilmu pengetahuan dan riset",
     "Bekerja langsung di masyarakat",
     "Mengekspresikan kreativitas",
-
-
     "Membangun karier secepatnya"
 ])
-tipe_pemecah = st.selectbox("🧠 Saat hadapi masalah, kamu cenderung:", [
+tipe_pemecah = st.selectbox("🧠 Gaya mengatasi masalah", [
     "Menganalisis logika", 
     "Diskusi bareng teman", 
     "Cari solusi kreatif", 
@@ -45,7 +43,7 @@ tipe_pemecah = st.selectbox("🧠 Saat hadapi masalah, kamu cenderung:", [
 with st.form("form_input"):
     col1, col2 = st.columns(2)
     with col1:
-        mat = st.slider("📐 Nilai Matematika", 0, 100, 70)
+        mat = st.slider("🖐️ Nilai Matematika", 0, 100, 70)
         ipa = st.slider("🔬 Nilai IPA", 0, 100, 70)
         ips = st.slider("📚 Nilai IPS", 0, 100, 70)
         bindo = st.slider("📝 Nilai Bahasa Indonesia", 0, 100, 70)
@@ -53,7 +51,7 @@ with st.form("form_input"):
         minat = st.selectbox("🧠 Minat utama kamu", ["Ngoding", "Menggambar", "Menulis", "Berhitung", "Berbicara"])
         karakter = st.selectbox("🎨 Karakter dominan", ["Logis", "Kreatif", "Sabar", "Komunikatif"])
     with col2:
-        gaya = st.selectbox("🧩 Gaya belajar", ["Visual", "Auditori", "Kinestetik"])
+        gaya = st.selectbox("🧹 Gaya belajar", ["Visual", "Auditori", "Kinestetik"])
         kerja = st.radio("🤝 Suka kerja tim?", ["Ya", "Tidak"])
         tantangan = st.radio("🔥 Suka tantangan?", ["Ya", "Tidak"])
 
@@ -68,42 +66,48 @@ if submit:
     model, encoders = get_model()
     try:
         input_data = np.array([[mat, ipa, ips, bindo, bing,
-                                encoders['minat'].transform([minat.lower()])[0],
-                                encoders['karakter'].transform([karakter.lower()])[0],
-                                encoders['gaya_belajar'].transform([gaya.lower()])[0],
-                                encoders['suka_kerja_tim'].transform([kerja.lower()])[0],
-                                encoders['suka_tantangan'].transform([tantangan.lower()])[0],
-                                encoders['sekolah'].transform([sekolah.lower()])[0],
-                                encoders['lokasi'].transform([lokasi.lower()])[0],
-                                encoders['tipe_pemecah'].transform([tipe_pemecah.lower()])[0],
-                                encoders['tujuan'].transform([tujuan.lower()])[0]
-                                
-                               ]])
+            encoders['minat'].transform([minat.lower()])[0],
+            encoders['karakter'].transform([karakter.lower()])[0],
+            encoders['gaya_belajar'].transform([gaya.lower()])[0],
+            encoders['suka_kerja_tim'].transform([kerja.lower()])[0],
+            encoders['suka_tantangan'].transform([tantangan.lower()])[0],
+            encoders['sekolah'].transform([sekolah.lower()])[0],
+            encoders['lokasi'].transform([lokasi.lower()])[0],
+            encoders['tipe_pemecah'].transform([tipe_pemecah.lower()])[0],
+            encoders['tujuan'].transform([tujuan.lower()])[0]
+        ]])
 
         probs = model.predict_proba(input_data)[0]
         top3_idx = probs.argsort()[-3:][::-1]
         top3_jurusan = encoders['jurusan'].inverse_transform(top3_idx)
         top3_probs = probs[top3_idx]
 
-        st.success(f"✅ Prediksi Jurusan Teratas:")
+        st.success("\u2705 Prediksi Jurusan Teratas:")
         for jur, p in zip(top3_jurusan, top3_probs):
             st.write(f"🎓 {jur} — {p*100:.1f}%")
 
+        # Simpan riwayat jurusan teratas
         st.session_state.history.append(top3_jurusan[0])
 
-        # Tampilkan deskripsi jurusan (jika tersedia)
+        # Pie Chart Probabilitas saat ini
         st.markdown("---")
+        st.subheader("📊 Distribusi Probabilitas (Prediksi Ini)")
+        prob_df = pd.DataFrame({"Jurusan": top3_jurusan, "Probabilitas": top3_probs})
+        fig_prob = px.pie(prob_df, names='Jurusan', values='Probabilitas', hole=0.4)
+        st.plotly_chart(fig_prob, use_container_width=True)
+
+        # Info deskriptif opsional
         if top3_jurusan[0] == "Teknik Informatika":
-            st.info("📘 *Teknik Informatika mempelajari tentang pemrograman, sistem komputer, dan pengembangan aplikasi.*")
+            st.info("\ud83d\udcd8 Teknik Informatika mempelajari tentang pemrograman, sistem komputer, dan pengembangan aplikasi.")
         elif top3_jurusan[0] == "Desain Komunikasi Visual":
-            st.info("🎨 *DKV menggabungkan seni dan komunikasi visual untuk media digital atau cetak.*")
+            st.info("\ud83c\udfa8 DKV menggabungkan seni dan komunikasi visual untuk media digital atau cetak.")
 
     except Exception as e:
         st.error(f"Terjadi kesalahan saat prediksi: {e}")
 
-# ====== Riwayat Prediksi ======
+# ====== Riwayat Prediksi (Semua Jurusan Teratas) ======
 if st.session_state.history:
-    st.subheader("📊 Riwayat Prediksi Jurusan")
+    st.subheader("📊 Riwayat Prediksi Pengguna")
     hist_series = pd.Series(st.session_state.history).value_counts().reset_index()
     hist_series.columns = ["Jurusan", "Jumlah"]
     fig = px.pie(hist_series, names='Jurusan', values='Jumlah',
