@@ -9,7 +9,7 @@ def load_data():
 
     # Kolom kategori yang harus di-encode
     kategori = ['minat', 'karakter', 'gaya_belajar', 'suka_kerja_tim',
-                'suka_tantangan', 'sekolah', 'lokasi', 'gaya_kerja', 'waktu_kerja', 'jurusan']
+                'suka_tantangan', 'sekolah', 'lokasi', 'tipe_pemecah', 'tujuan', 'jurusan']
     
     encoders = {}
     for col in kategori:

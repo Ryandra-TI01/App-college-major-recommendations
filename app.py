@@ -26,8 +26,20 @@ def get_model():
 st.markdown("### 🧩 Tambahan Informasi Personal")
 sekolah = st.selectbox("🏫 Jenis Sekolah", ["SMA IPA", "SMA IPS", "SMK TKJ", "SMK Akuntansi", "MA", "Homeschooling"])
 lokasi = st.selectbox("🌍 Lokasi studi yang diinginkan", ["Jawa Barat", "DKI Jakarta", "Yogyakarta", "Luar Negeri"])
-gaya_kerja = st.selectbox("💼 Gaya kerja yang kamu suka", ["Kantoran", "Lapangan", "Remote"])
-waktu_kerja = st.selectbox("📅 Jadwal kerja yang kamu suka", ["Tetap", "Fleksibel", "Berdasarkan deadline"])
+tujuan = st.selectbox("🎯 Saat kuliah nanti, kamu ingin lebih fokus ke:", [
+    "Ilmu pengetahuan dan riset",
+    "Bekerja langsung di masyarakat",
+    "Mengekspresikan kreativitas",
+
+
+    "Membangun karier secepatnya"
+])
+tipe_pemecah = st.selectbox("🧠 Saat hadapi masalah, kamu cenderung:", [
+    "Menganalisis logika", 
+    "Diskusi bareng teman", 
+    "Cari solusi kreatif", 
+    "Bikin rencana terstruktur"
+])
 
 # ====== Form Input ======
 with st.form("form_input"):
@@ -63,8 +75,10 @@ if submit:
                                 encoders['suka_tantangan'].transform([tantangan.lower()])[0],
                                 encoders['sekolah'].transform([sekolah.lower()])[0],
                                 encoders['lokasi'].transform([lokasi.lower()])[0],
-                                encoders['gaya_kerja'].transform([gaya_kerja.lower()])[0],
-                                encoders['waktu_kerja'].transform([waktu_kerja.lower()])[0]]])
+                                encoders['tipe_pemecah'].transform([tipe_pemecah.lower()])[0],
+                                encoders['tujuan'].transform([tujuan.lower()])[0]
+                                
+                               ]])
 
         probs = model.predict_proba(input_data)[0]
         top3_idx = probs.argsort()[-3:][::-1]
