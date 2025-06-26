@@ -1,35 +1,35 @@
 import pandas as pd
-from sklearn.tree import DecisionTreeClassifier
+from xgboost import XGBClassifier
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
 
 def load_data():
-    df = pd.read_csv("dataset.csv")
-    le_minat = LabelEncoder()
-    le_karakter = LabelEncoder()
-    le_jurusan = LabelEncoder()
+    df = pd.read_csv("dummy.csv")
+    encoders = {}
+    for col in ['minat', 'karakter', 'gaya_belajar', 'suka_kerja_tim', 'suka_tantangan', 'jurusan']:
+        le = LabelEncoder()
+        df[col] = le.fit_transform(df[col])
+        encoders[col] = le
 
-    df['minat'] = le_minat.fit_transform(df['minat'])
-    df['karakter'] = le_karakter.fit_transform(df['karakter'])
-    df['jurusan'] = le_jurusan.fit_transform(df['jurusan'])
-
-    X = df[['matematika', 'ipa', 'ips', 'minat', 'karakter']]
+    X = df.drop(columns=['jurusan'])
     y = df['jurusan']
-
-    return X, y, le_minat, le_karakter, le_jurusan, df
-
+    return X, y, encoders, df
 
 def train_model():
-    X, y, le_minat, le_karakter, le_jurusan, _ = load_data()
-    model = DecisionTreeClassifier(max_depth=3)
+    X, y, encoders, _ = load_data()
+    model = XGBClassifier(use_label_encoder=False, eval_metric='mlogloss')
     model.fit(X, y)
-    return model, le_minat, le_karakter, le_jurusan
+    return model, encoders
 
 def evaluate_model():
-    X, y, *_ = load_data()
-    model = DecisionTreeClassifier(max_depth=3)
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+    X, y, _, _ = load_data()
+    X_train, X_test, y_train, y_test = train_test_split(
+        X, y, test_size=0.2, stratify=y, random_state=42
+    )
+
+    model = XGBClassifier(use_label_encoder=False, eval_metric='mlogloss')
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
+
     return accuracy_score(y_test, y_pred)
