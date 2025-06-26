@@ -1,4 +1,5 @@
 streamlit
-scikit-learn
-pandas
 xgboost
+pandas
+scikit-learn
+plotly
