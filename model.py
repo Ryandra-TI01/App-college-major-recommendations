@@ -6,10 +6,15 @@ from sklearn.metrics import accuracy_score
 
 def load_data():
     df = pd.read_csv("dummy.csv")
+
+    # Kolom kategori yang harus di-encode
+    kategori = ['minat', 'karakter', 'gaya_belajar', 'suka_kerja_tim',
+                'suka_tantangan', 'sekolah', 'lokasi', 'gaya_kerja', 'waktu_kerja', 'jurusan']
+    
     encoders = {}
-    for col in ['minat', 'karakter', 'gaya_belajar', 'suka_kerja_tim', 'suka_tantangan', 'jurusan']:
+    for col in kategori:
         le = LabelEncoder()
-        df[col] = le.fit_transform(df[col])
+        df[col] = le.fit_transform(df[col].str.lower())
         encoders[col] = le
 
     X = df.drop(columns=['jurusan'])
